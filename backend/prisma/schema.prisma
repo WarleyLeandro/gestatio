@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Paciente {
+  id       String @id @default(uuid())
+  nome     String
+  email    String @unique
+  cpf      String @unique
+  password String
+
+  dadosPessoais       DadosPessoais?
+  dadosSus            DadosSus?
+  dadosEmergencia     DadosEmergencia?
+  fichaDeParto        FichaDeParto[]
+  fichaDeConsulta     FichaDeConsulta[]
+  pacienteFavoritado  PacienteFavoritado[]
+  fichaDeAntecedentes FichaDeAntecedentes[]
+  fichasDoPreNatal    FichaDoPreNatal[]
+  FichaDeExame        FichaDeExame[]
+  fichaDeVacina       FichaDeVacinas[]
+
+  @@map("pacientes")
+}
+
+model Medico {
+  id       String @id @default(uuid())
+  nome     String
+  cpf      String @unique
+  crm      String @unique
+  email    String @unique
+  password String
+
+  pacienteFavoritado PacienteFavoritado[]
+  fichaDeParto       FichaDeParto[]
+  fichaDeConsulta    FichaDeConsulta[]
+  FichaDoPreNatal    FichaDoPreNatal[]
+  FichaDeExame       FichaDeExame[]
+  FichaDeVacinas     FichaDeVacinas[]
+
+  @@map("medicos")
+}
+
+model DadosPessoais {
+  id              String  @id @default(uuid())
+  conhecidoComo   String
+  nomeCompanheiro String
+  dataNascimento  String
+  idade           Int
+  raca            String
+  trabalhaEmCasa  Boolean
+  ocupacao        String
+  cep             String
+  endereco        String
+  cidade          String
+  estado          String
+  telefoneFixo    String
+  telefoneCelular String
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String   @unique
+
+  @@map("dadosPessoais")
+}
+
+model DadosSus {
+  id                  String @id @default(uuid())
+  susIdCartao         String
+  nomeDoutorRef       String
+  NISID               String
+  hospitalNascCrianca String
+  unidMedicaPreNatal  String
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String   @unique
+
+  @@map("dadosSus")
+}
+
+model DadosEmergencia {
+  id              String @id @default(uuid())
+  nomeEmerg       String
+  parentescoEmerg String
+  celEmerg        String
+  telEmerg        String
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String   @unique
+
+  @@map("dadosEmergencia")
+}
+
+model PacienteFavoritado {
+  id String @id @default(uuid())
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String
+
+  medico      Medico @relation(fields: [fk_idMedico], references: [id])
+  fk_idMedico String
+
+  @@map("pacientesFavoritados")
+}
+
+model FichaDeParto {
+  id                  String   @id @default(uuid())
+  tipoParto           String
+  sangramento         String
+  intercorrencias     String
+  medicamentosUsados  String
+  altaNaMaternidade   String
+  recemNascido        String
+  apgarPrimeiroMinuto String
+  apgarQuintoMinuto   String
+  pesoNaAlta          Float
+  visitaDomiciliar    String
+  createdAt           DateTime @default(now())
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String
+
+  medico      Medico @relation(fields: [fk_idMedico], references: [id])
+  fk_idMedico String
+
+  @@map("fichasDePartos")
+}
+
+model FichaDeConsulta {
+  id                           String   @id @default(uuid())
+  dataConsulta                 String
+  idadeGestacionalDUM          String
+  idadeGestacionalUSG          String
+  peso                         Float
+  IMC                          Float
+  queixa                       String
+  apresentacaoFetal            String
+  observacaoDiagnosticoConduta String
+  pressaoArterial              Float
+  alturaUterina                Float
+  batimentoCardiacoFetal       Float
+  movimentoFetal               String
+  exantema                     String
+  toque                        String
+  createdAt                    DateTime @default(now())
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String
+
+  medico      Medico @relation(fields: [fk_idMedico], references: [id])
+  fk_idMedico String
+
+  @@map("fichasDeConsultas")
+}
+
+model FichaDeAntecedentes {
+  id           String @id @default(uuid())
+  diabetes     SNNI?  @default(NAO_INFORMADO)
+  hipertensao  SNNI?  @default(NAO_INFORMADO)
+  gemelaridade SNNI?  @default(NAO_INFORMADO)
+  outros       SNNI?  @default(NAO_INFORMADO)
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String   @unique
+
+  @@map("fichaDeAntecedentes")
+}
+
+model FichaDoPreNatal {
+  id                String          @id @default(uuid())
+  nivelInstrucao    NivelInstrucao? @default(NENHUM)
+  estadoCivil       EstadoCivil?    @default(SOLTEIRA)
+  pesoAnterior      String
+  altura            String
+  IMC               String
+  DUM               String
+  DPPD              String
+  DPPE              String
+  IGH               String
+  IGM               String
+  tipoGravidez      String
+  riscoGestacional  String
+  gravidezPlanejada Boolean
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String
+
+  medico      Medico @relation(fields: [fk_idMedico], references: [id])
+  fk_idMedico String
+
+  @@map("fichasDoPreNatal")
+}
+
+model FichaDeVacinas {
+  id            String   @id @default(uuid())
+  ATStatus      ATStatus? @default(NAO_INFORMADO)
+  AT1dose       String
+  AT2dose       String
+  vacinadTpa    String
+  HBStatus      String
+  HB1dose       String
+  HB2dose       String
+  HB3dose       String
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String
+
+  medico      Medico @relation(fields: [fk_idMedico], references: [id])
+  fk_idMedico String
+
+  @@map("fichaDeVacinas")
+}
+
+model FichaDeExame {
+  id                         String           @id @default(uuid())
+  ABO_RH                     String
+  glicemiaJejum              String
+  testeOralToleranciaGlicose String
+  sifilis                    PositivoNegativo
+  vdrl                       PositivoNegativo
+  hiv_antiHiv                PositivoNegativo
+  hepatiteB                  PositivoNegativo
+  toxoplasmose               PositivoNegativo
+  hemoglobina_hematocrito    String
+  urinaEAS                   String
+  urinaCultura               String
+  coombsIndireto             String
+
+  paciente      Paciente @relation(fields: [fk_idPaciente], references: [id])
+  fk_idPaciente String
+
+  medico      Medico @relation(fields: [fk_idMedico], references: [id])
+  fk_idMedico String
+
+  @@map("fichaDeExame")
+}
+
+enum ATStatus {
+  MENOS_5_ANOS
+  MAIS_5_ANOS
+  NAO_INFORMADO
+}
+
+enum SNNI {
+  SIM
+  NAO
+  NAO_INFORMADO
+}
+
+enum PositivoNegativo {
+  POSITIVO
+  NEGATIVO
+}
+
+enum NivelInstrucao {
+  FUNDAMENTAL
+  MEDIO
+  SUPERIOR
+  NENHUM
+}
+
+enum EstadoCivil {
+  CASADA
+  SOLTEIRA
+  ESTAVEL
+  OUTRO
+}
